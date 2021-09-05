@@ -1,7 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:layout/pages/detail.dart';
+
+import 'package:http/http.dart' as http;  // package สำหรับ request ข้อมูล
+import 'dart:async';  // package สำหรับ request ข้อมูล
 
 class ArticlePage extends StatefulWidget {
   // const ArticlePage({ Key? key }) : super(key: key);
@@ -28,17 +30,19 @@ class _ArticlePageState extends State<ArticlePage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(14),
-        child: FutureBuilder(builder: (context, snapshot) {
-            var data = json.decode(snapshot.data.toString()); // [{ภาคเหนือ...เที่ยวไหนดี?...},{},{},{},{}] เป็น List Data
+        child: FutureBuilder(builder: (context, AsyncSnapshot snapshot) {
+            //var data = json.decode(snapshot.data.toString()); // [{ภาคเหนือ...เที่ยวไหนดี?...},{},{},{},{}] เป็น List Data
             return ListView.builder(
               itemBuilder: (BuildContext context, int index){
-                  return MyBox(data[index]['title'], data[index]['subtitle'], data[index]['image_url'], data[index]['detail']);
+                  return MyBox(snapshot.data[index]['title'], snapshot.data[index]['subtitle'], snapshot.data[index]['image_url'], snapshot.data[index]['detail']);
               }, 
-              itemCount: data.length,
+              itemCount: snapshot.data.length,
               );
 
           },
-          future: DefaultAssetBundle.of(context).loadString('assets/data.json'), //เป็นการโหลด file json
+
+          future: getData(), //เรียกใช้ file JSON จาก GitHub
+          //future: DefaultAssetBundle.of(context).loadString('assets/data.json'), //เป็นการโหลด file json จากใน Project
         )
       )
     );
@@ -104,5 +108,14 @@ class _ArticlePageState extends State<ArticlePage> {
     );
   }
 
+  // async เป็น function ที่ใช้เวลาดาวน์โหลด จะใช้สำหรับการดึงข้อมูลจาก Internet
+  // await จะมาคู่กับ async รอการ response ให้จบถึงมีการ return ออกมา
+  Future getData() async {
+    //https://raw.githubusercontent.com/Yernnoi413/BasicAPI/main/data.json
+    var url = Uri.https('raw.githubusercontent.com','/Yernnoi413/BasicAPI/main/data.json');
+    var response = await http.get(url);
+    var result = json.decode(response.body);
+    return result;
+  }
 
 }
